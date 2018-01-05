@@ -28,7 +28,7 @@ class RequestValidatorMixin(object):
                 parameters = self.params
 
             method, url, headers, parameters = self.parse_request(
-                request, parameters, fake_method)
+                request, parameters)
 
             oauth_request = oauth2.Request.from_request(
                 method,
@@ -39,15 +39,15 @@ class RequestValidatorMixin(object):
             self.oauth_server.verify_request(
                 oauth_request, self.oauth_consumer, {})
 
-        except oauth2.MissingSignature, e:
+        except oauth2.MissingSignature, err:
             if handle_error:
                 return False
             else:
-                raise e
+                raise err
         # Signature was valid
         return True
 
-    def parse_request(self, request, parameters):
+    def parse_request(self, request):
         '''
         This must be implemented for the framework you're using
 
@@ -57,7 +57,10 @@ class RequestValidatorMixin(object):
         headers is a dictionary of any headers sent in the request
         parameters are the parameters sent from the LMS
         '''
-        raise NotImplemented
+        return (request.method,
+                request.url,
+                request.headers,
+                request.form.copy())
 
     def valid_request(self, request):
         '''
@@ -71,7 +74,7 @@ class FlaskRequestValidatorMixin(RequestValidatorMixin):
     A mixin for OAuth request validation using Flask
     '''
 
-    def parse_request(self, request, parameters=None, fake_method=None):
+    def parse_request(self, request, parameters=None):
         '''
         Parse Flask request
         '''
@@ -94,8 +97,8 @@ class DjangoRequestValidatorMixin(RequestValidatorMixin):
                 request.build_absolute_uri(),
                 request.META,
                 (dict(request.POST.iteritems())
-                    if request.method == 'POST'
-                    else parameters))
+                 if request.method == 'POST'
+                 else parameters))
 
 
 class WebObRequestValidatorMixin(RequestValidatorMixin):
