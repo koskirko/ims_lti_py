@@ -28,7 +28,7 @@ class RequestValidatorMixin(object):
                 parameters = self.params
 
             method, url, headers, parameters = self.parse_request(
-                request, parameters, fake_method)
+                request, parameters)
 
             oauth_request = oauth2.Request.from_request(
                 method,
@@ -57,7 +57,10 @@ class RequestValidatorMixin(object):
         headers is a dictionary of any headers sent in the request
         parameters are the parameters sent from the LMS
         '''
-        raise NotImplemented
+        return (request.method,
+                request.url,
+                request.headers,
+                request.form.copy())
 
     def valid_request(self, request):
         '''
